@@ -41,6 +41,7 @@ func (o out) Read(p []byte) (n int, err error) {
 
 	for i := 0; i < n; i++ {
 		if p[i] == 'q' {
+			term.Restore(int(os.Stdin.Fd()), oldState)
 			fmt.Println("Bye!")
 			os.Exit(0)
 		}
@@ -60,9 +61,10 @@ func (o out) Write(p []byte) (n int, err error) {
 	return n, nil
 }
 
+var oldState *term.State
 var o = out{}
 
-func run() error {
+func run() (err error) {
 
 	c := exec.Command(os.Args[1], os.Args[2:]...)
 	// Start the command with a pty.
@@ -86,11 +88,17 @@ func run() error {
 		}
 	}()
 	ch <- syscall.SIGWINCH // Initial resize.
-
+	/*
+		w := &pty.Winsize{
+			X: 80,
+			Y: 25,
+		}
+		pty.Setsize(ptmx, w)
+	*/
 	// Set stdin in raw mode.
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	oldState, err = term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer func() { _ = term.Restore(int(os.Stdin.Fd()), oldState) }() // Best effort.
 
