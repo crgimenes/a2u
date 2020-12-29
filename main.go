@@ -36,6 +36,19 @@ var (
 
 type out struct{}
 
+func (o out) Read(p []byte) (n int, err error) {
+	n, err = os.Stdin.Read(p)
+
+	for i := 0; i < n; i++ {
+		if p[i] == 'q' {
+			fmt.Println("Bye!")
+			os.Exit(0)
+		}
+	}
+
+	return n, err
+}
+
 func (o out) Write(p []byte) (n int, err error) {
 	n = len(p)
 	m := ""
@@ -82,7 +95,8 @@ func run() error {
 	defer func() { _ = term.Restore(int(os.Stdin.Fd()), oldState) }() // Best effort.
 
 	// Copy stdin to the pty and the pty to stdout.
-	go func() { _, _ = io.Copy(ptmx, os.Stdin) }()
+	go func() { _, _ = io.Copy(ptmx, o) }()
+	//go func() { _, _ = io.Copy(ptmx, os.Stdin) }()
 	//_, _ = io.Copy(os.Stdout, ptmx)
 	_, _ = io.Copy(o, ptmx)
 
