@@ -88,13 +88,7 @@ func run() (err error) {
 		}
 	}()
 	ch <- syscall.SIGWINCH // Initial resize.
-	/*
-		w := &pty.Winsize{
-			X: 80,
-			Y: 25,
-		}
-		pty.Setsize(ptmx, w)
-	*/
+
 	// Set stdin in raw mode.
 	oldState, err = term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
